@@ -1,5 +1,4 @@
-from django.shortcuts import render
-from .serializers import CustomUserSerializer,CustomUserTokenSerializer,LoginSerializer
+from .serializers import CustomUserSerializer,CustomUserTokenSerializer,LoginSerializer,PasswordChangeSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,7 +6,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .serializers import CustomUserSerializer
-from django.contrib.auth.models import AbstractUser
 from django.shortcuts import get_object_or_404
 from .models import CustomUser
 from rest_framework.permissions import AllowAny,IsAuthenticated
@@ -62,3 +60,21 @@ class LogoutView(APIView):
             return Response({'detail': 'Logout successful'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'detail': 'Unable to logout'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class PasswordChange(APIView):
+    permission_classes=[IsAuthenticated]
+    def post(self,request):
+        user=request.user
+        serializer=PasswordChangeSerializer(data=request.data)
+        if serializer.is_valid():
+            old_password=serializer.validated_data['old_password']
+            new_password=serializer.validated_data['new_password']
+            if not user.check_password(old_password):
+                return Response({'error': 'Incorrect old password.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            user.set_password(new_password)
+            user.save()
+            return Response({'message': 'Password changed successfully.'}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
