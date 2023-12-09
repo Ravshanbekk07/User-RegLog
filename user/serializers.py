@@ -19,3 +19,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     
 class CustomUserTokenSerializer(serializers.Serializer):
     username=serializers.CharField(max_length=100)
+
+class LoginSerializer(serializers.Serializer):
+    username=serializers.CharField()
+    password=serializers.CharField(write_only=True)
